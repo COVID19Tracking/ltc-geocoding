@@ -4,7 +4,7 @@ import pandas as pd
 jsn = "/Users/jzarrabi/work/COVID19Tracking/website-data/long_term_care_facilities.json"
 
 def find_duplicates():
-    with open(jsn) as 
+    with open(jsn) as f:
         data = json.load(f)
         thing = set()
 
