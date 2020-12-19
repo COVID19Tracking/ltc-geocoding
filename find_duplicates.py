@@ -6,9 +6,11 @@ jsn = "/Users/jzarrabi/work/COVID19Tracking/website-data/long_term_care_faciliti
 def find_duplicates():
     with open(jsn) as f:
         data = json.load(f)
-        thing = set()
+        already_processed = { }
 
         num_duplicates = 0
+
+        duplicates = [ ]
 
         for facility in data:
             all_null = True
@@ -36,15 +38,26 @@ def find_duplicates():
             else:
                 name = 'no-name'
 
+            if facility['date_outbreak_opened']:
+                all_null = False
+                date_outbreak_opened = facility['date_outbreak_opened']
+            else:
+                date_outbreak_opened = 'no-date'
+
             if all_null:
                 continue
 
-            key = state + county + city + name
+            key = "%s%s%s%s%s" % (state, county, city, name, date_outbreak_opened)
 
-            if key in thing:
+            if key in already_processed:
                 num_duplicates += 1
+                duplicates.append(already_processed[key])
+                duplicates.append(facility)
 
-            thing.add(key)
+            already_processed[key] = facility
+
+        with open("duplicates.json", "w") as outfile:
+            json.dump(duplicates, outfile)
 
         print("NUM DUPLICATES: %d" % num_duplicates)
 
