@@ -7,51 +7,37 @@ def find_duplicates():
     with open(jsn) as f:
         data = json.load(f)
         already_processed = { }
-
-        num_duplicates = 0
-
         duplicates = [ ]
+        not_found = 0
 
         for facility in data:
-            all_null = True
+            city = get_elem("city", facility)
+            county = get_elem("county", facility)
+            state = get_elem("state", facility)
+            facility_name = get_elem("facility_name", facility)
+            date_outbreak_opened = get_elem("date_outbreak_opened", facility)
+            facility_type_state = get_elem("facility_type_state", facility)
+            ctp_facility_category = get_elem("ctp_facility_category", facility)
+            state_fed_regulated = get_elem("state_fed_regulated", facility)
 
-            if facility['city']:
-                all_null = False
-                city = facility['city']
-            else:
-                city = "no-city"
-
-            if facility['county']:
-                all_null = False
-                county = facility['county']
-            else:
-                county = 'no-county'
-
-            if facility['state']:
-                state = facility['state']
-            else:
-                state = 'no-state'
-
-            if facility['facility_name']:
-                all_null = False
-                name = facility['facility_name']
-            else:
-                name = 'no-name'
-
-            if facility['date_outbreak_opened']:
-                all_null = False
-                date_outbreak_opened = facility['date_outbreak_opened']
-            else:
-                date_outbreak_opened = 'no-date'
-
-            if all_null:
+            if city == "not-found" and county == "not-found" and facility_name == "not-found" and date_outbreak_opened == "not-found" and facility_type_state == "not-found" and ctp_facility_category == "not-found" and state_fed_regulated == "not-found":
+                not_found += 1
                 continue
 
-            key = "%s%s%s%s%s" % (state, county, city, name, date_outbreak_opened)
+            key = "%s%s%s%s%s%s%s%s" % (
+                    state,
+                    county,
+                    city,
+                    facility_name,
+                    date_outbreak_opened,
+                    facility_type_state,
+                    ctp_facility_category,
+                    state_fed_regulated
+                )
 
             if key in already_processed:
-                num_duplicates += 1
-                duplicates.append(already_processed[key])
+                if already_processed[key] not in duplicates:
+                    duplicates.append(already_processed[key])
                 duplicates.append(facility)
 
             already_processed[key] = facility
@@ -59,7 +45,14 @@ def find_duplicates():
         with open("duplicates.json", "w") as outfile:
             json.dump(duplicates, outfile)
 
-        print("NUM DUPLICATES: %d" % num_duplicates)
+        print("NUM DUPLICATES: %d" % len(duplicates))
+        print("NUM NOTFOUND: %d" % not_found)
+
+def get_elem(name, facility):
+    if facility[name]:
+        return facility[name]
+    return "not-found"
+
 
 def find_duplicates_pandas():
     ltc = pd.read_json(jsn)
