@@ -22,7 +22,7 @@ def drop_dupes(df):
     return df
 
 def create_hash(record):
-    record['hash1'] = hash(tuple(record))
+    record['hash'] = hash(tuple(record))
     return record
 
 def build_query(record):
@@ -61,13 +61,8 @@ def main():
     df = ltc[['state', 'county', 'city', 'facility_name']]
     df = drop_dupes(df)
     df = df.apply(create_hash, axis = 1)
-    #for testing purposes
-    test = df.head(2)
-    test = test.apply(geocode, axis = 1)
-    test.to_csv('ltc_geocoded_hashed.csv')
-    #to run
-    # df = df.apply(geocode, axis = 1)
-    # df.to_csv('ltc_geocoded_hashed.csv')
+    df = df.apply(geocode, axis = 1)
+    df.to_csv('ltc_geocoded_hashed.csv')
 
 if __name__ == "__main__":
     main()
