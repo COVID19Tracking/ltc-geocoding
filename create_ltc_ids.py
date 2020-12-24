@@ -7,7 +7,6 @@ Created on Fri Dec 18 17:51:57 2020
 """
 
 import pandas as pd
-import requests
 
 ltc = pd.read_json("~/python/website/_data/long_term_care_facilities.json")
 
