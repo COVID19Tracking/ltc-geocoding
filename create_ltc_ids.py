@@ -53,10 +53,20 @@ def get_long_lat(record):
     r_json = json.loads(r.text)
     return r_json["features"][0]["geometry"]["coordinates"]
 
+def safe_get(record, key):
+    return record[key] if record[key] else ""
+
+def generate_row_from_record(record):
+    long_lat = get_long_lat(record)
+    lat_long = (long_lat[1], long_lat[0])
+
+    uniq_id = hash(lat_long)
+    return [uniq_id, safe_get(record, "state"), safe_get(record, "city"), safe_get(record, "county"), safe_get(record, "facility_name"), lat_long]
+
 def main():
     df = drop_dupes()
     print(df.iloc[1000])
-    print(get_long_lat(df.iloc[1000]))
+    print(generate_row_from_record(df.iloc[1000]))
 
 if __name__ == "__main__":
     main()
