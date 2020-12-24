@@ -1,72 +1,57 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec 18 17:51:57 2020
-
-@author: Gilmourj
-"""
-
 import pandas as pd
-import requests
-from urllib.parse import quote_plus as quote_plus
-import json
 import os
+import googlemaps
+
 
 jsn = os.getenv("LTC_FACILITIES_JSON")
 ltc = pd.read_json(jsn)
 
-def drop_dupes():
-    df = ltc[['state', 'county', 'city', 'facility_name']]
+google_key = os.getenv("GOOGLE_API_KEY")
+gmaps = googlemaps.Client(key=google_key)
+
+def drop_dupes(df):
     df = df.drop_duplicates()
     return df
 
-def create_hash(df):
-    df['hash'] = df.apply(lambda x: hash(tuple(x)), axis = 1)
-    df.to_json('ltc_hashed.json')
+def create_hash(record):
+    record['hash1'] = hash(tuple(record))
+    return record
 
-def get_long_lat(record):
-    mapbox_key = os.getenv("MAPBOX_API_KEY")
-
+def build_query(record):
     query = ""
     if record["facility_name"]:
-        query += record["facility_name"] + " "
-
+        query += record["facility_name"] + ", "
     if record["city"]:
-        query += record["city"] + " "
-
+        query += record["city"] + ", "
     if record["county"]:
-        query += record["county"] + " "
-
+        query += record["county"] + " County, "
     if record["state"]:
         query += record["state"] + " "
-
-    if not record["state"] and not record["city"] and record["county"]:
-        query += "county "
-
-    q = quote_plus(query)
-    url = "https://api.mapbox.com/geocoding/v5/mapbox.places-permanent/%s.json?country=US&access_token=%s" % (q, mapbox_key)
-    r = requests.get(url)
-
-    if r.status_code != requests.codes.ok:
-        raise ValueError("Expected a 200 from mapbox but got %d" % r.status_code)
-
-    r_json = json.loads(r.text)
-    return r_json["features"][0]["geometry"]["coordinates"]
-
-def safe_get(record, key):
-    return record[key] if record[key] else ""
-
-def generate_row_from_record(record):
-    long_lat = get_long_lat(record)
-    lat_long = (long_lat[1], long_lat[0])
-
-    uniq_id = hash(lat_long)
-    return [uniq_id, safe_get(record, "state"), safe_get(record, "city"), safe_get(record, "county"), safe_get(record, "facility_name"), lat_long]
+    return query
+    
+def geocode(record):
+    query = build_query(record)
+    result = gmaps.geocode(query)
+    g = result[0]
+    if not 'geometry' in g:
+        return record
+    latlon = g.get("geometry").get("location")
+    record['address'] = g.get("formatted_address") if g.get("formatted_address") else ''
+    record['lat'] = latlon.get("lat") if latlon.get("lat") else ''
+    record['lon'] = latlon.get("lng") if latlon.get("lng") else ''
+    return record
 
 def main():
-    df = drop_dupes()
-    print(df.iloc[1000])
-    print(generate_row_from_record(df.iloc[1000]))
+    df = ltc[['state', 'county', 'city', 'facility_name']]
+    df = drop_dupes(df)
+    df = df.apply(create_hash, axis = 1)
+    #for testing purposes
+    test = df.head(2)
+    test = test.apply(geocode, axis = 1)
+    test.to_json('ltc_geocoded_hashed.json')
+    #to run
+    # df = df.apply(geocode, axis = 1)
+    # df.to_json('ltc_geocoded_hashed.json')
 
 if __name__ == "__main__":
     main()
