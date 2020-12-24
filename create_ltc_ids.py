@@ -12,7 +12,7 @@ from urllib.parse import quote_plus as quote_plus
 import json
 import os
 
-jsn = "/Users/jzarrabi/work/COVID19Tracking/website-data/long_term_care_facilities.json"
+jsn = os.getenv("LTC_FACILITIES_JSON")
 ltc = pd.read_json(jsn)
 
 def drop_dupes():
