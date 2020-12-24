@@ -6,9 +6,15 @@ import pandas as pd
 
 
 jsn = os.getenv("LTC_FACILITIES_JSON")
+if jsn is None:
+    raise ValueError("you must set a value for the LTC_FACILITIES_JSON env variable")
+
 ltc = pd.read_json(jsn)
 
 google_key = os.getenv("GOOGLE_API_KEY")
+if google_key is None:
+    raise ValueError("you must set a value for the GOOGLE_API_KEY env variable")
+
 gmaps = googlemaps.Client(key=google_key)
 
 def drop_dupes(df):
