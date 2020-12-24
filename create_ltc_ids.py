@@ -61,7 +61,7 @@ def main():
     test.to_csv('ltc_geocoded_hashed.csv')
     #to run
     # df = df.apply(geocode, axis = 1)
-    # df.to_json('ltc_geocoded_hashed.json')
+    # df.to_csv('ltc_geocoded_hashed.csv')
 
 if __name__ == "__main__":
     main()
