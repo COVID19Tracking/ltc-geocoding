@@ -42,7 +42,7 @@ def geocode(record):
 
     try:
         result = gmaps.geocode(query)
-    except (googlemaps.exceptions.Timeout, googlemaps.execeptions.ApiError, googlemaps.execpetions.TransportError) as err:
+    except Exception as err:
         logger.error("google maps call failed for query %s with error: %s" % (query, err))
         return record
 
