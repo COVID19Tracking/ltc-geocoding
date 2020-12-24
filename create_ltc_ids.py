@@ -1,6 +1,8 @@
-import pandas as pd
 import os
+
+from loguru import logger
 import googlemaps
+import pandas as pd
 
 
 jsn = os.getenv("LTC_FACILITIES_JSON")
@@ -28,13 +30,21 @@ def build_query(record):
     if record["state"]:
         query += record["state"] + " "
     return query
-    
+
 def geocode(record):
     query = build_query(record)
-    result = gmaps.geocode(query)
+
+    try:
+        result = gmaps.geocode(query)
+    except (googlemaps.exceptions.Timeout, googlemaps.execeptions.ApiError, googlemaps.execpetions.TransportError) as err:
+        logger.error("google maps call failed for query %s with error: %s" % (query, err))
+        return record
+
     g = result[0]
     if not 'geometry' in g:
+        logger.error("could not find coordinates in google map result for query %s" % query)
         return record
+
     latlon = g.get("geometry").get("location")
     record['address'] = g.get("formatted_address") if g.get("formatted_address") else ''
     record['lat'] = latlon.get("lat") if latlon.get("lat") else ''
@@ -48,7 +58,7 @@ def main():
     #for testing purposes
     test = df.head(2)
     test = test.apply(geocode, axis = 1)
-    test.to_json('ltc_geocoded_hashed.json')
+    test.to_csv('ltc_geocoded_hashed.csv')
     #to run
     # df = df.apply(geocode, axis = 1)
     # df.to_json('ltc_geocoded_hashed.json')
