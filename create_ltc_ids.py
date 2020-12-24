@@ -22,42 +22,50 @@ def drop_dupes():
 
 def create_hash(df):
     df['hash'] = df.apply(lambda x: hash(tuple(x)), axis = 1)
-    df.to_json('ltc_hashed.json')
+    return df
 
-def get_long_lat(record):
-    mapbox_key = os.getenv("MAPBOX_API_KEY")
-
+def build_query(record):
     query = ""
     if record["facility_name"]:
-        query += record["facility_name"] + " "
+        query += record["facility_name"] + ", "
 
     if record["city"]:
-        query += record["city"] + " "
+        query += record["city"] + ", "
 
     if record["county"]:
-        query += record["county"] + " "
+        query += record["county"] + " County, "
 
     if record["state"]:
         query += record["state"] + " "
+    return query
 
-    if not record["state"] and not record["city"] and record["county"]:
-        query += "county "
+    
+def geocode(record):
+    google_key = os.getenv("GOOGLE_API_KEY")
 
+    query = build_query(record)
     q = quote_plus(query)
-    url = "https://api.mapbox.com/geocoding/v5/mapbox.places-permanent/%s.json?country=US&access_token=%s" % (q, mapbox_key)
+    print("query: " + query)
+    print(q)
+    
+    url = "https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s" % (q, google_key)
+    print("url: " + url)
     r = requests.get(url)
 
     if r.status_code != requests.codes.ok:
-        raise ValueError("Expected a 200 from mapbox but got %d" % r.status_code)
-
-    r_json = json.loads(r.text)
-    return r_json["features"][0]["geometry"]["coordinates"]
+        raise ValueError("Expected a 200 from Google but got %d" % r.status_code)
+        return record
+    r_j = pd.read_json(r.text)
+    record['address'] = r_j["results"][0]["formatted_address"]
+    record['lat'] = r_j["results"][0]["geometry"]["location"]["lat"]
+    record['lon'] = r_j["results"][0]["geometry"]["location"]["lng"]
+    return record
 
 def safe_get(record, key):
     return record[key] if record[key] else ""
 
 def generate_row_from_record(record):
-    long_lat = get_long_lat(record)
+    long_lat = geocode(record)
     lat_long = (long_lat[1], long_lat[0])
 
     uniq_id = hash(lat_long)
@@ -65,8 +73,9 @@ def generate_row_from_record(record):
 
 def main():
     df = drop_dupes()
-    print(df.iloc[1000])
-    print(generate_row_from_record(df.iloc[1000]))
+    test = df.head(2)
+    t = test.apply(geocode, axis = 1)
+    #df.to_json('ltc_hashed.json')
 
 if __name__ == "__main__":
     main()
