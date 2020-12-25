@@ -45,11 +45,11 @@ def geocode(record):
     except Exception as err:
         logger.error("geocode call failed for query %s with error: %s" % (query, err))
         return record
-    
+
     if not result:
         logger.error("could not find coordinates in geocode result for query %s" % query)
         return record
-    
+
     g = result[0]
     if not 'geometry' in g:
         logger.error("could not find coordinates in geocode result for query %s" % query)
@@ -70,4 +70,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
