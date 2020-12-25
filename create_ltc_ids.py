@@ -43,12 +43,16 @@ def geocode(record):
     try:
         result = gmaps.geocode(query)
     except Exception as err:
-        logger.error("google maps call failed for query %s with error: %s" % (query, err))
+        logger.error("geocode call failed for query %s with error: %s" % (query, err))
         return record
-
+    
+    if not result:
+        logger.error("could not find coordinates in geocode result for query %s" % query)
+        return record
+    
     g = result[0]
     if not 'geometry' in g:
-        logger.error("could not find coordinates in google map result for query %s" % query)
+        logger.error("could not find coordinates in geocode result for query %s" % query)
         return record
 
     latlon = g.get("geometry").get("location")
