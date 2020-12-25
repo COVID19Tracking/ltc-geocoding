@@ -20,7 +20,7 @@ export = df.drop('Unnamed: 0', axis = 1)
 export = export.reset_index()
 export = export[['state', 'city', 'county', 'facility_name', 'hash', 'address', 'lat', 'lon']]
 
-export.to_csv('ltc_geocoded_hashed.csv')
+export.to_csv('ltc_geocoded_hashed.csv', index = False)
 
 # Data cleaning
 
