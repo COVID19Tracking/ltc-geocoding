@@ -11,6 +11,12 @@ if jsn is None:
 
 ltc = pd.read_json(jsn)
 
+geo = os.getenv("LTC_FACILITIES_GEOCODED_CSV")
+if geo is None:
+    raise ValueError("you must set a value for the LTC_FACILITIES_GEOCODED_CSV env variable")
+
+ltc_geo = pd.read_csv(geo)
+
 google_key = os.getenv("GOOGLE_API_KEY")
 if google_key is None:
     raise ValueError("you must set a value for the GOOGLE_API_KEY env variable")
@@ -38,6 +44,9 @@ def build_query(record):
     return query
 
 def geocode(record):
+    if(not pd.isnull(record['lat'])):
+        return record
+
     query = build_query(record)
 
     try:
@@ -47,7 +56,7 @@ def geocode(record):
         return record
 
     if not result:
-        logger.error("could not find coordinates in geocode result for query %s" % query)
+        logger.error("could not find geocode result for query %s" % query)
         return record
 
     g = result[0]
