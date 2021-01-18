@@ -55,6 +55,7 @@ def fill_in_missing(state_csv):
 
         not_in_block = pd.merge(current_block, facilities, on = ['State ', 'County', 'City', 'Facility Name'], how = 'right', indicator=True).loc[lambda x : x['_merge']=='right_only']
         not_in_block = not_in_block.apply(add_info, axis = 1, args = (last_collected, all_data, collection_date))
+        not_in_block = not_in_block[not_in_block['last_recorded'] != "Never"]
 
         current_block = current_block.apply(add_last_reported_now, axis = 1, args = (collection_date, ) )
         not_in_block = not_in_block.drop(columns = ["_merge"])
@@ -63,8 +64,6 @@ def fill_in_missing(state_csv):
         filled_in_state = filled_in_state.append(not_in_block)
 
     filled_in_state.reset_index(drop=True, inplace=True)
-
-
     filled_in_state.to_csv("filled_in_new_mexico.csv", index=False)
 
 
