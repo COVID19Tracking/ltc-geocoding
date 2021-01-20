@@ -2,19 +2,20 @@ import os
 
 import pandas as pd
 
-# ar_csv = os.getenv("AR_CSV")
-# if ar_csv is None:
-#     raise ValueError("you must set a value for AR_CSV")
-
+ar_csv = os.getenv("AR_CSV")
 nm_csv = os.getenv("NM_CSV")
-if nm_csv is None:
-    raise ValueError("you must set a value for AR_CSV")
+
+if (nm_csv is None) and (ar_csv is None):
+    raise ValueError("you must set a value for AR_CSV or NM_CSV")
 
 def add_info(record, last_collected, all_data, current_date):
     k = str(record['State ']) + str(record['County']) + str(record['City']) + str(record['Facility Name'])
     if k in last_collected:
         lr = last_collected[k]
-        row = all_data.loc[ (all_data['Date Collected'] == lr) &  (all_data['Facility Name'] == record['Facility Name'] ) ]
+        if type(record['County']) is not float and type(record['City']) is not float:
+            row = all_data.loc[ (all_data['Date Collected'] == lr) & (all_data['Facility Name'] == record['Facility Name']) & (all_data['County'] == record['County'])  & (all_data['City'] == record['City'] )]
+        else:
+            row = all_data.loc[ (all_data['Date Collected'] == lr) & (all_data['Facility Name'] == record['Facility Name'] )]
         record = copy_row(record, row)
 
         record['last_recorded'] = lr
@@ -34,7 +35,9 @@ def copy_row(new_row, old_row):
         new_row[c] = old_row.iloc[0][c]
     return new_row
 
-def fill_in_missing(state_csv):
+def fill_in_missing(state_csv, state_name):
+    print("filling in missing dates for facilities in %s" % state_name)
+
     filled_in_state = pd.DataFrame()
 
     all_data = pd.read_csv(state_csv)
@@ -64,11 +67,15 @@ def fill_in_missing(state_csv):
         filled_in_state = filled_in_state.append(not_in_block)
 
     filled_in_state.reset_index(drop=True, inplace=True)
-    filled_in_state.to_csv("filled_in_new_mexico.csv", index=False)
+    filled_in_state.to_csv("filled_in_%s.csv" % state_name, index=False)
 
 
 def main():
-    fill_in_missing(nm_csv)
+    if nm_csv:
+        fill_in_missing(nm_csv, "new_mexico")
+
+    if ar_csv:
+        fill_in_missing(ar_csv, "arkansas")
 
 if __name__ == "__main__":
     main()
