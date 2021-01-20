@@ -43,6 +43,7 @@ def fill_in_missing(state_csv, state_name):
     all_data = pd.read_csv(state_csv)
     all_data.columns = all_data.iloc[0]
     all_data = all_data.drop(all_data.index[0])
+    all_data = all_data[all_data['Date Collected'].notna()]
 
     collection_dates = all_data[['Date Collected']].drop_duplicates()
     facilities = all_data[['State ', 'County', 'City', 'Facility Name']].drop_duplicates()
