@@ -4,3 +4,6 @@ first-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,O
 second-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
 second-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Open,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
 second-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,first-outbreak-date
+third-outbreak-date,NM,,,nursing-home-2,Nursing Home,Nursing Home,Federal,, ,,,Open,,100,,100,,100,,,,,,,,,,,,,,,,,,,,,,,third-outbreak-date
+third-outbreak-date,NM,,,nursing-home-1,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
+third-outbreak-date,NM,,,nursing-home-3,Nursing Home,Nursing Home,Federal,, ,,,Closed,,18,,23,,3,,,,,,,,,,,,,,,,,,,,,,,second-outbreak-date
