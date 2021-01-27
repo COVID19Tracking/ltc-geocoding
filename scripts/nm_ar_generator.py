@@ -9,7 +9,7 @@ if (nm_csv is None) and (ar_csv is None):
     raise ValueError("you must set a value for AR_CSV or NM_CSV")
 
 def add_info(record, last_collected, all_data, current_date):
-    k = str(record['State ']) + str(record['County']) + str(record['City']) + str(record['Facility'])
+    k = str(record['State']) + str(record['County']) + str(record['City']) + str(record['Facility'])
     if k in last_collected:
         lr = last_collected[k]
         if type(record['County']) is not float and type(record['City']) is not float:
@@ -44,7 +44,7 @@ def fill_in_missing(state_csv, state_name):
     all_data = all_data[all_data['Date'].notna()]
 
     collection_dates = all_data[['Date']].drop_duplicates()
-    facilities = all_data[['State ', 'County', 'City', 'Facility']].drop_duplicates()
+    facilities = all_data[['State', 'County', 'City', 'Facility']].drop_duplicates()
 
     last_collected = { }
 
@@ -52,10 +52,10 @@ def fill_in_missing(state_csv, state_name):
         collection_date = date_row['Date']
         current_block = all_data.loc[all_data['Date'] == collection_date]
         for _, block_row in current_block.iterrows():
-            k = str(block_row['State ']) + str(block_row['County']) + str(block_row['City']) + str(block_row['Facility'])
+            k = str(block_row['State']) + str(block_row['County']) + str(block_row['City']) + str(block_row['Facility'])
             last_collected[k] = collection_date
 
-        not_in_block = pd.merge(current_block, facilities, on = ['State ', 'County', 'City', 'Facility'], how = 'right', indicator=True).loc[lambda x : x['_merge']=='right_only']
+        not_in_block = pd.merge(current_block, facilities, on = ['State', 'County', 'City', 'Facility'], how = 'right', indicator=True).loc[lambda x : x['_merge']=='right_only']
         not_in_block = not_in_block.apply(add_info, axis = 1, args = (last_collected, all_data, collection_date))
         not_in_block = not_in_block[not_in_block['last_recorded'] != "Never"]
 
