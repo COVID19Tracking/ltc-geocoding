@@ -2,10 +2,6 @@ import os
 
 import pandas as pd
 
-state_csv = os.getenv("STATE_CSV")
-
-if state_csv is None:
-    raise ValueError("you must set a value for STATE_CSV")
 
 ALL_DATES = [
     20200521, 20200528, 20200604, 20200611, 20200618,
@@ -25,6 +21,8 @@ def fill_in_missing_dates(state_csv, state_name):
 
     starting_date = data.iloc[0]['Date']
     i = ALL_DATES.index(starting_date) + 1
+    data = data.convert_dtypes()
+    data = data.astype({'CMS_ID': 'Int64'})
 
     while i < len(ALL_DATES):
         date = ALL_DATES[i]
@@ -38,6 +36,18 @@ def fill_in_missing_dates(state_csv, state_name):
 
         i += 1
 
-    data = data.convert_dtypes()
     data.reset_index(drop=True, inplace=True)
     data.to_csv("%s_all_dates.csv" % state_name, index=False)
+
+def main():
+    state_csv = os.getenv("STATE_CSV")
+
+    if state_csv is None:
+        raise ValueError("you must set a value for STATE_CSV")
+
+    if state_csv:
+        base=os.path.basename(state_csv)
+        fill_in_missing_dates(state_csv, os.path.splitext(base)[0])
+
+if __name__ == "__main__":
+    main()
