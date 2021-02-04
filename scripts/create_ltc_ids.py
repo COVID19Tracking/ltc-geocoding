@@ -89,7 +89,11 @@ def main():
     merged_2 = merged_2.drop('hash', axis = 1)
     merged_2 = merged_2.fillna(value='')
     merged_2 = merged_2.apply(create_hash, axis = 1)
-    geo = merged_2.apply(geocode, axis = 1)
+    merged_dup = merged_2
+    merged_dup['dup'] = merged_2.duplicated(subset=['hash'], keep=False)
+    merged_dup = merged_dup[(merged_dup['dup'] == False) | (merged_dup['lat'] != '')]
+    merged_dup = merged_dup.drop('dup', axis = 1)
+    geo = merged_dup.apply(geocode, axis = 1)
     geo = drop_dupes(geo)
     geo.to_csv('ltc_geocoded_hashed.csv')
 
