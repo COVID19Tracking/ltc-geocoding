@@ -5,6 +5,15 @@ import pandas as pd
 ar_csv = os.getenv("AR_CSV")
 nm_csv = os.getenv("NM_CSV")
 
+def standardize_data(df):
+    df[['County', 'City', 'Facility']] = df[['County', 'City', 'Facility']].fillna(value='')
+    for colname in ['County', 'City', 'Facility', 'Outbrk_Status']:
+        df[colname] = df[colname].str.upper()
+
+    # drop any rows with empty dates
+    df.drop(df[pd.isnull(df['Date'])].index, inplace = True)
+    df['Date'] = df['Date'].astype(int)
+
 if (nm_csv is None) and (ar_csv is None):
     raise ValueError("you must set a value for AR_CSV or NM_CSV")
 
@@ -12,10 +21,7 @@ def add_info(record, last_collected, all_data, current_date):
     k = str(record['State']) + str(record['County']) + str(record['City']) + str(record['Facility'])
     if k in last_collected:
         lr = last_collected[k]
-        if type(record['County']) is not float and type(record['City']) is not float:
-            row = all_data.loc[ (all_data['Date'] == lr) & (all_data['Facility'] == record['Facility']) & (all_data['County'] == record['County'])  & (all_data['City'] == record['City'] )]
-        else:
-            row = all_data.loc[ (all_data['Date'] == lr) & (all_data['Facility'] == record['Facility'] )]
+        row = all_data.loc[ (all_data['Date'] == lr) & (all_data['Facility'] == record['Facility']) & (all_data['County'] == record['County'])  & (all_data['City'] == record['City'] )]
         record = copy_row(record, row)
 
         record['last_recorded'] = lr
@@ -41,7 +47,7 @@ def fill_in_missing(state_csv, state_name):
     filled_in_state = pd.DataFrame()
 
     all_data = pd.read_csv(state_csv)
-    all_data = all_data[all_data['Date'].notna()]
+    standardize_data(all_data)
 
     collection_dates = all_data[['Date']].drop_duplicates()
     facilities = all_data[['State', 'County', 'City', 'Facility']].drop_duplicates()
