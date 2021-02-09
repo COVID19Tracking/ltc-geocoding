@@ -23,19 +23,21 @@ if google_key is None:
 
 gmaps = googlemaps.Client(key=google_key)
 
-def drop_dupes(df):
-    df = df.drop_duplicates()
-    return df
 
+# creates a unique ID for each facility
 def create_hash(record):
     record['hash'] = hash(tuple(record[['state', 'county', 'city', 'facility_name']]))
     return record
 
+
+# standardizes the facility records
 def uppercase(df):
     for colname in ['state', 'county', 'city', 'facility_name']:
         df[colname] = df[colname].str.upper()
     return df
 
+
+# builds the query string for the geocoding api
 def build_query(record):
     query = ""
     if record["facility_name"]:
@@ -48,6 +50,8 @@ def build_query(record):
         query += record["state"] + " "
     return query
 
+
+# hits the google geocoding api to find an address and lat/lon for each facility
 def geocode(record):
     if(not record['lat'] == ''):
         return record
@@ -73,6 +77,7 @@ def geocode(record):
     record['lon'] = latlon.get("lng") if latlon.get("lng") else ''
     return record
 
+
 def main():
     # latest facility list
     df = ltc[['state', 'county', 'city', 'facility_name']]
@@ -87,7 +92,7 @@ def main():
     # concatenating geocoded and non-geocoded facilities
     frames = [df, geo]
     merged = pd.concat(frames)
-    merged = drop_dupes(merged)
+    merged = merged.drop_duplicates()
     merged = merged.fillna(value='')
 
     # creating hash
@@ -100,7 +105,7 @@ def main():
 
     # geocoding
     geocoded = merged.apply(geocode, axis = 1)
-    geocoded = drop_dupes(geocoded)
+    geocoded = geocoded.drop_duplicates()
 
     # writing file
     merged.to_csv('../ltc_geocoded_hashed.csv')
