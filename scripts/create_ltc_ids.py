@@ -23,19 +23,21 @@ if google_key is None:
 
 gmaps = googlemaps.Client(key=google_key)
 
-def drop_dupes(df):
-    df = df.drop_duplicates()
-    return df
 
+# creates a unique ID for each facility
 def create_hash(record):
     record['hash'] = hash(tuple(record[['state', 'county', 'city', 'facility_name']]))
     return record
 
+
+# standardizes the facility records
 def uppercase(df):
     for colname in ['state', 'county', 'city', 'facility_name']:
         df[colname] = df[colname].str.upper()
     return df
 
+
+# builds the query string for the geocoding api
 def build_query(record):
     query = ""
     if record["facility_name"]:
@@ -48,6 +50,8 @@ def build_query(record):
         query += record["state"] + " "
     return query
 
+
+# hits the google geocoding api to find an address and lat/lon for each facility
 def geocode(record):
     if(not record['lat'] == ''):
         return record
@@ -73,29 +77,39 @@ def geocode(record):
     record['lon'] = latlon.get("lng") if latlon.get("lng") else ''
     return record
 
+
 def main():
+    # latest facility list
     df = ltc[['state', 'county', 'city', 'facility_name']]
     df = df.fillna(value='')
-    df = drop_dupes(df)
-    df = df.apply(create_hash, axis = 1)
-    ltc_geo = ltc_geo.drop('Unnamed: 0', axis = 1)
-    ltc_geo = ltc_geo.fillna(value='')
-    ltc_geo_upper = ltc_geo.drop('hash', axis = 1)
-    ltc_geo_upper = uppercase(ltc_geo_upper)
-    ltc_geo_upper = ltc_geo_upper.apply(create_hash, axis = 1)
-    merged = df.merge(ltc_geo.set_index('hash'), how='outer')
-    merged_2 = merged.merge(ltc_geo_upper.set_index('hash'), how='outer')
-    merged_2 = drop_dupes(merged_2)
-    merged_2 = merged_2.drop('hash', axis = 1)
-    merged_2 = merged_2.fillna(value='')
-    merged_2 = merged_2.apply(create_hash, axis = 1)
-    merged_dup = merged_2
-    merged_dup['dup'] = merged_2.duplicated(subset=['hash'], keep=False)
-    merged_dup = merged_dup[(merged_dup['dup'] == False) | (merged_dup['lat'] != '')]
-    merged_dup = merged_dup.drop('dup', axis = 1)
-    geo = merged_dup.apply(geocode, axis = 1)
-    geo = drop_dupes(geo)
-    geo.to_csv('ltc_geocoded_hashed.csv')
+    df = uppercase(df)
+
+    # previously geocoded file
+    geo = ltc_geo.drop(['Unnamed: 0', 'hash'], axis = 1)
+    geo = geo.fillna(value='')
+    geo = uppercase(geo)
+
+    # concatenating geocoded and non-geocoded facilities
+    frames = [df, geo]
+    merged = pd.concat(frames)
+    merged = merged.drop_duplicates()
+    merged = merged.fillna(value='')
+
+    # creating hash
+    merged = merged.apply(create_hash, axis = 1)
+
+    # dropping facilities if there exists a hash collision (therefore the same facility) and one record is not geocoded
+    merged['dup'] = merged.duplicated(subset=['hash'], keep=False)
+    merged = merged[(merged['dup'] == False) | (merged['lat'] != '')]
+    merged = merged.drop('dup', axis = 1)
+
+    # geocoding
+    geocoded = merged.apply(geocode, axis = 1)
+    geocoded = geocoded.drop_duplicates()
+
+    # writing file
+    merged.to_csv('../ltc_geocoded_hashed.csv')
+
 
 if __name__ == "__main__":
     main()
