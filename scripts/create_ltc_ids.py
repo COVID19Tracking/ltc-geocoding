@@ -85,7 +85,7 @@ def main():
     df = uppercase(df)
 
     # previously geocoded file
-    geo = ltc_geo.drop(['Unnamed: 0', 'hash'], axis = 1)
+    geo = ltc_geo.drop(['hash'], axis = 1)
     geo = geo.fillna(value='')
     geo = uppercase(geo)
 
