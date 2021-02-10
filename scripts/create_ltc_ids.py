@@ -108,7 +108,7 @@ def main():
     geocoded = geocoded.drop_duplicates()
 
     # writing file
-    merged.to_csv('../ltc_geocoded_hashed.csv')
+    geocoded.to_csv('../ltc_geocoded_hashed.csv')
 
 
 if __name__ == "__main__":
