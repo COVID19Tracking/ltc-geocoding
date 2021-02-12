@@ -94,6 +94,7 @@ def main():
     merged = pd.concat(frames)
     merged = merged.drop_duplicates()
     merged = merged.fillna(value='')
+    merged['state'] = merged['state'].str.strip()
 
     # creating hash
     merged = merged.apply(create_hash, axis = 1)
@@ -108,7 +109,7 @@ def main():
     geocoded = geocoded.drop_duplicates()
 
     # writing file
-    geocoded.to_csv('../ltc_geocoded_hashed.csv', index=False)
+    geocoded.to_csv('~/python/ltc-geocoding/ltc_geocoded_hashed.csv', index=False)
 
 
 if __name__ == "__main__":
