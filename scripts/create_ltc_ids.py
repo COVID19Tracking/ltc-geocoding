@@ -47,7 +47,7 @@ def build_query(record):
     if record["county"]:
         query += record["county"] + " County, "
     if record["state"]:
-        query += record["state"] + " "
+        query += record["state"]
     return query
 
 
