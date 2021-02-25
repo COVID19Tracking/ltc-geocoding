@@ -49,12 +49,17 @@ def build_query(record):
     if record["state"]:
         query += record["state"]
     return query
-
+    
 
 # hits the google geocoding api to find an address and lat/lon for each facility
 def geocode(record):
     if(not record['lat'] == ''):
         return record
+    
+    # VT facilities with few or many cases may be named "LONG TERM CARE FACILITY *"
+    if(record['state'] == 'VT' and record['facility_name'].find('LONG TERM CARE FACILITY') != -1):
+        return record
+    
     query = build_query(record)
     try:
         result = gmaps.geocode(query)
@@ -70,11 +75,19 @@ def geocode(record):
     if not 'geometry' in g:
         logger.error("could not find coordinates in geocode result for query %s" % query)
         return record
-
+    address_components = g.get('address_components')
     latlon = g.get("geometry").get("location")
     record['address'] = g.get("formatted_address") if g.get("formatted_address") else ''
     record['lat'] = latlon.get("lat") if latlon.get("lat") else ''
     record['lon'] = latlon.get("lng") if latlon.get("lng") else ''
+    
+    city_results = [a for a in address_components if a["types"] == ['locality', 'political']]
+    city = city_results[0] if city_results else {}
+    county_results = [a for a in address_components if a["types"] == ['administrative_area_level_2', 'political']]
+    county = county_results[0] if county_results else {}
+    
+    record['geocoded_city'] = city.get('long_name')
+    record['geocoded_county'] = county.get('long_name')
     return record
 
 
@@ -107,9 +120,15 @@ def main():
     # geocoding
     geocoded = merged.apply(geocode, axis = 1)
     geocoded = geocoded.drop_duplicates()
+    df = geocoded[['state','city','county','facility_name','address','lat','lon','hash', 'geocoded_city','geocoded_county']]
+    df = df.sort_values(by=['state','facility_name'])
+    
+    #titlecase county and city
+    df['city'] = df['city'].str.title()
+    df['county'] = df['county'].str.title()
 
     # writing file
-    geocoded.to_csv('~/python/ltc-geocoding/ltc_geocoded_hashed.csv', index=False)
+    df.to_csv('~/python/ltc-geocoding/ltc_geocoded_hashed.csv', index=False)
 
 
 if __name__ == "__main__":
