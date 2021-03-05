@@ -123,10 +123,14 @@ def main():
     df = geocoded[['state','city','county','facility_name','address','lat','lon','hash', 'geocoded_city','geocoded_county']]
     df = df.sort_values(by=['state','facility_name'])
     
-    #titlecase county and city
+    # titlecase county and city
     df['city'] = df['city'].str.title()
     df['county'] = df['county'].str.title()
-
+    
+    # removing extra county strings
+    df['geocoded_county'] = df['geocoded_county'].str.replace('County', '')
+    df['county'] = df['county'].str.replace('County', '')
+    
     # writing file
     df.to_csv('~/python/ltc-geocoding/ltc_geocoded_hashed.csv', index=False)
 
